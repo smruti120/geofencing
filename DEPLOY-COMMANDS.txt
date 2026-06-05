@@ -1,0 +1,109 @@
+===========================================
+🚀 DEPLOY TO PRODUCTION SERVER
+===========================================
+
+SERVER: 10.10.220.53
+PATH: /var/www/attendance
+
+--- OPTION 1: One-Click Deploy Script ---
+
+chmod +x deploy-to-server.sh
+./deploy-to-server.sh
+
+
+--- OPTION 2: Manual Step-by-Step ---
+
+# 1. Build locally
+npm run build
+
+# 2. Copy files to server
+rsync -avz --delete dist/ sharda@10.10.220.53:/var/www/attendance/
+
+# 3. SSH to server and fix permissions
+ssh sharda@10.10.220.53
+sudo chown -R www-data:www-data /var/www/attendance
+sudo chmod -R 755 /var/www/attendance
+sudo systemctl restart nginx
+exit
+
+
+--- VERIFY DEPLOYMENT ---
+
+# Check files on server
+ssh sharda@10.10.220.53 "ls -la /var/www/attendance/"
+
+# Check nginx status
+ssh sharda@10.10.220.53 "sudo systemctl status nginx"
+
+# View error logs
+ssh sharda@10.10.220.53 "sudo tail -20 /var/log/nginx/error.log"
+
+
+--- IF BLANK PAGE STILL SHOWS ---
+
+# SSH to server
+ssh sharda@10.10.220.53
+
+# Check what's in the directory
+cd /var/www/attendance
+ls -la
+
+# Should show:
+# - index.html (large file ~500KB)
+# - assets/ folder
+
+# If not, manually copy:
+sudo rm -rf /var/www/attendance/*
+# Then re-run rsync from local machine
+
+
+===========================================
+✅ AFTER DEPLOYMENT
+===========================================
+
+1. Open browser: http://10.10.220.53
+
+2. Login with:
+   Username: admin
+   Password: admin123
+
+3. First thing to do:
+   - Admin Portal → Employees Roster
+   - Click "Bulk Import (CSV)"
+   - Upload your employee data
+
+4. CSV Format:
+EmployeeCode,Name,Designation,Department,EmailID,PhoneNo,ReportingManager,Role
+EMP-001,John Smith,Professor,CS,john@campus.edu,+1-555-0101,Dr. Smith,Staff
+
+
+===========================================
+🎯 WHAT'S BEEN FIXED
+===========================================
+
+✅ All demo/mock data removed
+✅ Empty arrays for production
+✅ Default admin fallback user
+✅ Login works with no data
+✅ Proper error handling
+
+The app now starts with a clean slate.
+You add users through the Admin Portal.
+
+
+===========================================
+📞 SUPPORT
+===========================================
+
+If issues persist:
+
+1. Check nginx error log:
+   ssh sharda@10.10.220.53
+   sudo tail -50 /var/log/nginx/error.log
+
+2. Verify file structure:
+   ls -la /var/www/attendance/
+   cat /var/www/attendance/index.html | head -5
+
+3. Check nginx config:
+   cat /etc/nginx/sites-available/attendance
